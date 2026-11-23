@@ -11,7 +11,7 @@ Người thực hiện: Nguyễn Văn Trường, MSSV 2351170625. Phạm vi BE-0
 | BE-03, issue #3 | Kho PDF riêng tư, đường dẫn nội bộ, tệp bất biến, kiểm hash và quyền tải | BE-04/05/06/09/10, kiểm tệp bị sửa và quyền Admin/Issuer |
 | BE-04, issue #4 | Tạo/upload PDF có QR, font tiếng Việt, preview, SHA-256, receipt/event/state finalize | BE-07/08/09 và các test wrong hash/student/contract/sender, pending/revert |
 | BE-05, issue #5 | Public lookup không PII, danh sách cá nhân, thống kê, events phân trang | Test public/list/revoke/stats/events/RPC |
-| BE-06, issue #6 | Retry sau restart, lệnh đối soát bản chờ, 31 Backend tests, CI và tài liệu Frontend | docs/TEST_RESULTS.md và docs/evidence |
+| BE-06, issue #6 | Retry sau restart, lệnh đối soát bản chờ, 40 Backend tests, CI và tài liệu Frontend | docs/TEST_RESULTS.md và docs/evidence |
 
 Giữ nguyên mã Solidity và ABI. Backend dùng contract hiện có của Thuận; giao dịch được ví người dùng ký, không có private key hoặc seed phrase trong mã nguồn Backend.
 
@@ -60,7 +60,7 @@ Hướng dẫn cài, chạy ba terminal, cấu hình LAN và khôi phục: [back
 npm --prefix backend run verify
 ```
 
-Lệnh trên chạy typecheck Backend/client mẫu, build, 20 contract tests và 31 Backend tests với Hardhat node tạm. Logs mới nằm backend/reports; ảnh chụp bằng chứng chạy tại thời điểm bàn giao nằm docs/evidence. Xem [TEST_RESULTS.md](TEST_RESULTS.md).
+Lệnh trên chạy typecheck Backend/client mẫu, build, 20 contract tests và 40 Backend tests với Hardhat node tạm. Logs mới nằm backend/reports; ảnh chụp bằng chứng chạy tại thời điểm bàn giao nằm docs/evidence. Xem [TEST_RESULTS.md](TEST_RESULTS.md).
 
 Backend có lệnh reconcile:pending cho các bản chờ đã lưu txHash. Migration và setup:env có thể chạy lại; setup:env không ghi đè secret. Node Hardhat reset làm mất chain; khi demo lại cần triển khai/config đúng và chọn database mới nếu dữ liệu cũ thuộc phiên chain đã reset.
 
@@ -74,6 +74,12 @@ PDF/QR cơ bản ở Backend giúp BE chạy độc lập, không đồng nghĩa
 
 ## 6. Git và review
 
-Repo đích: https://github.com/lucthuan1601/EduCert. Tài khoản thực hiện: NguyenTruongNT, dùng Git identity đã cấu hình trong workspace. Do chưa có quyền push repo đích, các nhánh được push lên fork https://github.com/NguyenTruongNT/EduCert và mở PR về main repo nhóm.
+Repo đích: https://github.com/lucthuan1601/EduCert. Tài khoản thực hiện: NguyenTruongNT, dùng Git identity đã cấu hình trong workspace. Sau khi nhận lời mời cộng tác, đã xác minh quyền push vào repo đích. Sáu nhánh giai đoạn và toàn bộ lịch sử commit được đưa trực tiếp vào repo nhóm, mở PR cùng repo về main để chủ sở hữu đánh giá. PR #7 từ fork là phiên bản trước, được đánh dấu thay thế bằng PR chính.
 
 Mỗi giai đoạn có issue và nhánh theo [BACKEND_PLAN.md](BACKEND_PLAN.md). Commit dùng feat/test/docs/fix(BE): truong - nội dung. Nhánh giai đoạn nối tiếp giữ các mốc; PR cuối tổng hợp toàn bộ phần Backend. Chỉ nhóm review/merge mới xác nhận nghiệm thu chung.
+
+## 7. Xác nhận sau rà soát bổ sung
+
+Đã đối chiếu đầy đủ BE-01 → BE-06 với README mục 4.2. Chi tiết từng tiêu chí và bằng chứng: [BACKEND_REVIEW_CHECKLIST.md](BACKEND_REVIEW_CHECKLIST.md). Phần mã nguồn và kiểm thử Backend của Trường đã đủ để review/tích hợp; chưa thay thế phê duyệt M0, review/merge hoặc nghiệm thu toàn nhóm.
+
+Lượt rà soát tái hiện và sửa hai lỗi: multipart upload hỏng trả 500 và cấu hình storage qua symlink vào public. Bổ sung kiểm tra gửi đồng thời, bảo vệ chủ draft, trạng thái thu hồi trước finalize, public lookup không cần SQLite, retry từ tx chưa biết và PDF mã hóa thật. Bộ Backend tăng lên 40 test, cộng 20 contract tests là 60 test.

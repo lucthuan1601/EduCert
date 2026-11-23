@@ -13,6 +13,8 @@ Người thực hiện: Nguyễn Văn Trường, MSSV 2351170625. Phạm vi BE-0
 
 Các nhánh được tạo nối tiếp để giữ phụ thuộc giữa các giai đoạn. PR cuối tổng hợp các commit về `main`; mỗi nhánh giai đoạn giữ mốc tương ứng để nhóm review. Quy ước commit: `feat(BE): truong - ...`, `test(BE): truong - ...`, `docs(BE): truong - ...`, `fix(BE): truong - ...`.
 
+Sau khi tài khoản NguyenTruongNT nhận quyền write, các nhánh được push trực tiếp lên repo nhóm. Giữ nguyên 6 commit giai đoạn, thêm commit sửa lỗi và tài liệu rà soát; PR cùng repo thay thế PR fork #7. Không push thẳng main hoặc tự merge.
+
 ## Các ràng buộc phải giữ
 
 - Không lưu PDF, họ tên, tên khóa học hoặc lý do thu hồi dạng tự do lên chain.

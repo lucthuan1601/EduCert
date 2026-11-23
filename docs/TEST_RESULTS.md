@@ -9,8 +9,8 @@ Ngày kiểm tra: 23/11/2026. Môi trường local: Windows x64, Node.js v22.17.
 | Build Backend | PASS |
 | Smart contract CT-01 → CT-20 | 20 PASS |
 | Backend BE-01 → BE-10 bắt buộc | 10 PASS |
-| Backend/API bổ sung | 21 PASS |
-| Tổng kiểm thử contract + Backend | 51 PASS, không có ca skip |
+| Backend/API bổ sung | 30 PASS |
+| Tổng kiểm thử contract + Backend | 60 PASS, không có ca skip |
 | PDF tiếng Việt và QR | Render kiểm tra trực quan; lấy lại đúng tên tiếng Việt, giải QR độc lập khớp URL ID |
 
 ## Phạm vi bằng chứng
@@ -18,6 +18,10 @@ Ngày kiểm tra: 23/11/2026. Môi trường local: Windows x64, Node.js v22.17.
 Backend tests thực sự mở Hardhat node ở port trống, deploy CertificateRegistry, cấp role, ký giao dịch bằng ví ngẫu nhiên trong bộ nhớ, tạo PDF thật, gọi Express API, đọc/ghi SQLite và kho riêng. Test retry giữ txHash, đóng/mở lại Backend rồi đối soát; test pending/revert điều khiển mining của node. Không ghi private key vào log.
 
 Các ca bổ sung kiểm signed PDF, CSRF/Origin, phiên hết hạn, preview riêng tư, sai hash/student/contract/sender/event, receipt pending/revert, public không PII, trạng thái thu hồi, thống kê/events, RPC sai mạng/không có contract/node mất kết nối, tệp bị sửa, danh sách cá nhân và chống dùng lại txHash.
+
+Lượt rà soát tiếp theo bổ sung 9 test: multipart hỏng trả 400; kho PDF không được trỏ qua symlink hoặc tên ..private vào public; nonce gửi đồng thời chỉ tạo một phiên; finalize đồng thời không tạo trùng; ví khác không thể gắn tx vào draft; public lookup hoạt động khi SQLite không có record; thu hồi trước finalize trả REVOKED; thay tx chưa biết bằng giao dịch thật; PDF mã hóa AES-256 thật bị từ chối trước khi lưu.
+
+Hai lỗi multipart/symlink đã được tái hiện bằng test thất bại trước sửa, sau đó kiểm hồi quy trong toàn bộ bộ test. Fixture encrypted-demo.pdf hoàn toàn tổng hợp, không chứa PII và không cần Python để chạy CI.
 
 Lệnh tái hiện: `npm --prefix backend run verify` sau npm ci ở root và backend. Không cần MetaMask hoặc node demo; không cần .env cho bộ test. Báo cáo mới được sinh trong backend/reports. Bản log tại thời điểm bàn giao: [evidence](evidence/). summary JSON ghi thời gian UTC, runtime và exit code thực tế; các duration trong log là thời gian runner, không phải benchmark sản phẩm.
 

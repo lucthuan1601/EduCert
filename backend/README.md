@@ -57,11 +57,11 @@ npm --prefix backend run verify
 npm --prefix backend run reconcile:pending
 ```
 
-test tự compile contract và mở Hardhat node ở port trống, dùng ví ngẫu nhiên trong bộ nhớ; không cần node demo, MetaMask hoặc .env. Không in khóa ví ra log. verify chạy typecheck/build/20 contract tests/31 Backend tests và lưu báo cáo trong backend/reports.
+test tự compile contract và mở Hardhat node ở port trống, dùng ví ngẫu nhiên trong bộ nhớ; không cần node demo, MetaMask hoặc .env. Không in khóa ví ra log. verify chạy typecheck/build/20 contract tests/40 Backend tests và lưu báo cáo trong backend/reports.
 
 reconcile:pending dùng .env để đối soát tối đa 100 bản chờ/lần, không gửi giao dịch. FE cũng có thể gọi lại finalize cùng ID/txHash. Lỗi RPC giữ dữ liệu chờ.
 
-31 API tests không thay cho 12 UI/E2E tests của nhóm. PDF adapter cơ bản tại src/services/pdf.ts cho phép Tùng thay mẫu; biên bản xác minh và E2E vẫn cần phối hợp. Upload thêm trang phụ lục QR; không hỗ trợ PDF mã hóa/đã ký số.
+40 API tests không thay cho 12 UI/E2E tests của nhóm. PDF adapter cơ bản tại src/services/pdf.ts cho phép Tùng thay mẫu; biên bản xác minh và E2E vẫn cần phối hợp. Upload thêm trang phụ lục QR; không hỗ trợ PDF mã hóa/đã ký số.
 
 ## Cấu trúc
 
