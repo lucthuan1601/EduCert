@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, realpathSync } from 'node:fs';
 import { lstat, readFile, unlink, writeFile } from 'node:fs/promises';
-import { basename, isAbsolute, relative, resolve } from 'node:path';
+import { basename, isAbsolute, relative, resolve, sep } from 'node:path';
 import { backendRoot, MAX_PDF_BYTES } from '../config.js';
 import type { CertificateRow } from '../database.js';
 import { ApiError, invariant } from '../errors.js';
@@ -16,12 +16,25 @@ export class PrivateStorage {
   readonly root: string;
   constructor(path: string) {
     const resolved = resolve(path);
-    for (const forbidden of ['../frontend/public', '../frontend/dist', '../public', '../dist'].map(value => resolve(backendRoot, value))) {
-      const child = relative(forbidden, resolved);
-      invariant(child.startsWith('..') || isAbsolute(child), 500, 'STORAGE_CONFIGURATION_ERROR', 'PDF storage must be outside public directories');
-    }
+    const publicRoots = ['../frontend/public', '../frontend/dist', '../public', '../dist'].flatMap(value => {
+      const logical = resolve(backendRoot, value);
+      try { return [logical, realpathSync(logical)]; }
+      catch (error) {
+        if (['ENOENT', 'ENOTDIR'].includes((error as NodeJS.ErrnoException).code ?? '')) return [logical];
+        throw error;
+      }
+    });
+    const assertPrivate = (candidate: string) => {
+      for (const forbidden of publicRoots) {
+        const child = relative(forbidden, candidate);
+        const outside = child === '..' || child.startsWith(`..${sep}`) || isAbsolute(child);
+        invariant(outside, 500, 'STORAGE_CONFIGURATION_ERROR', 'PDF storage must be outside public directories');
+      }
+    };
+    assertPrivate(resolved);
     mkdirSync(resolved, { recursive: true, mode: 0o700 });
     this.root = realpathSync(resolved);
+    assertPrivate(this.root);
   }
   private path(key: string) {
     invariant(/^[a-f0-9]{64}\.pdf$/.test(key) && basename(key) === key, 400, 'INVALID_STORAGE_KEY', 'Invalid internal storage key');

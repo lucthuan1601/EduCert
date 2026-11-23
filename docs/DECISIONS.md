@@ -13,4 +13,5 @@
 | BE-D07 | Finalize yêu cầu chủ draft và chứng cứ on-chain; không yêu cầu vẫn giữ issuer role để đối soát giao dịch đã thành công | Khôi phục được giao dịch hợp lệ sau khi role thay đổi; tạo draft mới vẫn kiểm tra issuer role hiện tại |
 | BE-D08 | Preview draft chỉ Issuer tạo draft; download chứng chỉ đối chiếu chain và quyền | Không công khai PII hoặc bản nháp |
 | BE-D09 | Event API giới hạn cửa sổ tối đa 5000 block, có phân trang và trả mốc block | Truy vấn hữu hạn; FE có thể lần lượt đọc các cửa sổ |
-| BE-D10 | Nhánh giai đoạn nối tiếp, PR tổng kết về main từ fork NguyenTruongNT | Tài khoản thực hiện chưa có quyền push repo nhóm; giữ các mốc BE-01 → BE-06 |
+| BE-D10 | Giữ nhánh giai đoạn nối tiếp; sau khi nhận quyền write, push trực tiếp các nhánh vào lucthuan1601/EduCert và mở PR cùng repo về main | Giữ đủ 6 commit gốc và các commit rà soát bổ sung; PR fork #7 được thay thế bằng PR chính |
+| BE-D11 | Multipart hỏng trả 400 UPLOAD_ERROR; xác minh cả đường dẫn logic và realpath của kho PDF | Rà soát đã tái hiện lỗi 500 cho multipart và symlink vào public; kiểm tra đường dẫn phải nhận đúng thành phần .. thay vì tên bắt đầu bằng .. |

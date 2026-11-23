@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { before, after, beforeEach, afterEach, test } from 'node:test';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createServer } from 'node:net';
-import { mkdtemp, readFile, rm, writeFile, access } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile, access, mkdir, rmdir, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +15,7 @@ import { createApp } from '../src/app.js';
 import { type AppConfig, MAX_PDF_BYTES } from '../src/config.js';
 import { findCertificate } from '../src/database.js';
 import { ApiError } from '../src/errors.js';
-import { sha256 } from '../src/services/storage.js';
+import { PrivateStorage, sha256 } from '../src/services/storage.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const origin = 'http://localhost:5173';
@@ -406,4 +406,86 @@ test('API: malformed PDF, wrong MIME, empty fields and issuer spoofing are rejec
   await actor.agent.post('/api/v1/drafts/upload').set('X-CSRF-Token', actor.csrf).send({}).expect(400);
   await actor.agent.post('/api/v1/drafts/generate').set('X-CSRF-Token', actor.csrf).send({ studentWallet: ctx.student.address, studentName: '', courseName: 'Demo' }).expect(400);
   await actor.agent.post('/api/v1/drafts/generate').set('X-CSRF-Token', actor.csrf).send({ studentWallet: ctx.student.address, studentName: 'Demo', courseName: 'Demo', issuerWallet: ctx.stranger.address }).expect(400);
+});
+
+test('API: malformed multipart upload returns a client error', async () => {
+  const actor = await login();
+  const response = await actor.agent.post('/api/v1/drafts/upload').set('X-CSRF-Token', actor.csrf)
+    .set('Content-Type', 'multipart/form-data; boundary=broken-boundary')
+    .send('--broken-boundary\r\nContent-Disposition: form-data; name="file"; filename="test.pdf"\r\nContent-Type: application/pdf\r\n\r\n%PDF-1.7').expect(400);
+  assert.equal(response.body.error.code, 'UPLOAD_ERROR');
+});
+
+test('Storage: a symlink into a public directory cannot become private storage', async () => {
+  const publicRoot = join(root, 'public');
+  const created = await mkdir(publicRoot, { recursive: true });
+  try {
+    const alias = join(ctx.temp, 'public-alias');
+    await symlink(publicRoot, alias, 'junction');
+    assert.throws(() => new PrivateStorage(alias), (error: any) => error.code === 'STORAGE_CONFIGURATION_ERROR');
+    assert.throws(() => new PrivateStorage(join(publicRoot, '..private')), (error: any) => error.code === 'STORAGE_CONFIGURATION_ERROR');
+  } finally {
+    // Only remove the empty directory if this test created it; never delete existing user data.
+    if (created === publicRoot) await rmdir(publicRoot);
+  }
+});
+
+test('Auth: concurrent reuse of a nonce creates exactly one session', async () => {
+  const value = await challenge(ctx.issuer);
+  const responses = await Promise.all([request(ctx.app).post('/api/v1/auth/verify').send(value.payload), request(ctx.app).post('/api/v1/auth/verify').send(value.payload)]);
+  assert.deepEqual(responses.map(response => response.status).sort(), [200, 401]);
+  assert.equal((ctx.db.prepare('SELECT COUNT(*) AS count FROM AuthSession').get() as { count: number }).count, 1);
+});
+
+test('Finalize: concurrent requests confirm one issuance without duplicates', async () => {
+  const actor = await login(); const value = await draft(actor); const txHash = await issue(value);
+  const responses = await Promise.all([finalize(actor, value, txHash), finalize(actor, value, txHash), finalize(actor, value, txHash)]);
+  assert.deepEqual(responses.map(response => response.status), [200, 200, 200]);
+  assert.ok(responses.every(response => response.body.data.syncState === 'ISSUED'));
+  assert.equal((ctx.db.prepare('SELECT COUNT(*) AS count FROM CertificateFile').get() as { count: number }).count, 1);
+  assert.equal((await request(ctx.app).get('/api/v1/stats').expect(200)).body.data.issued, 1);
+});
+
+test('Finalize: another wallet cannot bind a transaction to an issuer draft', async () => {
+  const actor = await login(); const value = await draft(actor); const txHash = await issue(value);
+  const student = await login(ctx.student);
+  await finalize(student, value, txHash).expect(403);
+  assert.equal(findCertificate(ctx.db, value.certificateId)?.tx_hash, null);
+  await finalize(actor, value, txHash).expect(200);
+});
+
+test('Public: on-chain certificate remains queryable without a SQLite record', async () => {
+  const value = { certificateId: randomHash(), fileHash: randomHash() };
+  await issue(value);
+  assert.equal(findCertificate(ctx.db, value.certificateId), undefined);
+  const response = await request(ctx.app).get(`/api/v1/certificates/${value.certificateId}/public`).expect(200);
+  assert.equal(response.body.data.fileHash, value.fileHash);
+  assert.equal(response.body.data.status, 'REGISTERED_ACTIVE');
+});
+
+test('Finalize: certificate revoked before reconciliation returns REVOKED', async () => {
+  const actor = await login(); const value = await draft(actor); const txHash = await issue(value);
+  await (await ctx.registry.getFunction('revokeCertificate')(value.certificateId, 1)).wait();
+  const response = await finalize(actor, value, txHash).expect(200);
+  assert.equal(response.body.data.syncState, 'REVOKED');
+  assert.equal(findCertificate(ctx.db, value.certificateId)?.sync_state, 'REVOKED');
+});
+
+test('Finalize: failed unknown transaction can be replaced by the actual issuance', async () => {
+  const actor = await login(); const value = await draft(actor);
+  await finalize(actor, value, randomHash()).expect(400);
+  const txHash = await issue(value);
+  const response = await finalize(actor, value, txHash).expect(200);
+  assert.equal(response.body.data.txHash, txHash);
+  assert.equal(response.body.data.syncState, 'ISSUED');
+});
+
+test('PDF: an actual encrypted PDF is rejected before storage', async () => {
+  const actor = await login();
+  const source = await readFile(new URL('./fixtures/encrypted-demo.pdf', import.meta.url));
+  const response = await actor.agent.post('/api/v1/drafts/upload').set('X-CSRF-Token', actor.csrf)
+    .field('studentWallet', ctx.student.address).field('studentName', 'Demo').field('courseName', 'Demo')
+    .attach('file', source, { filename: 'encrypted.pdf', contentType: 'application/pdf' }).expect(400);
+  assert.equal(response.body.error.code, 'INVALID_PDF');
+  assert.equal((ctx.db.prepare('SELECT COUNT(*) AS count FROM CertificateFile').get() as { count: number }).count, 0);
 });

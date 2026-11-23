@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import type { Router } from 'express';
+import type { Router, RequestHandler } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
 import type Database from 'better-sqlite3';
@@ -28,6 +28,13 @@ export function mountDrafts(router: Router, config: AppConfig, db: Database.Data
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_PDF_BYTES, files: 1, fields: 8, fieldSize: 4096, parts: 9 },
     fileFilter: (_req, file, callback) => file.mimetype === 'application/pdf' ? callback(null, true) : callback(new ApiError(400, 'INVALID_PDF', 'Expected application/pdf')),
   });
+  const readUpload = upload.single('file');
+  const parseUpload: RequestHandler = (req, res, next) => {
+    readUpload(req, res, (error: unknown) => {
+      if (!error || error instanceof ApiError || error instanceof multer.MulterError) next(error);
+      else next(new ApiError(400, 'UPLOAD_ERROR', 'Malformed multipart upload'));
+    });
+  };
   const draftAccess = [auth.requireSession, auth.requireCsrf, auth.requireIssuer];
 
   async function createDraft(wallet: string, body: unknown, source?: Buffer) {
@@ -49,7 +56,7 @@ export function mountDrafts(router: Router, config: AppConfig, db: Database.Data
   router.post('/drafts/generate', ...draftAccess, async (req, res) => {
     res.status(201).json({ success: true, data: await createDraft(authIdentity(req).wallet, req.body) });
   });
-  router.post('/drafts/upload', ...draftAccess, upload.single('file'), async (req, res) => {
+  router.post('/drafts/upload', ...draftAccess, parseUpload, async (req, res) => {
     invariant(req.file, 400, 'FILE_REQUIRED', 'Provide a PDF in the file field');
     checkPdfInput(req.file.buffer, req.file.mimetype);
     res.status(201).json({ success: true, data: await createDraft(authIdentity(req).wallet, req.body, req.file.buffer) });
