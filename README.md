@@ -5,6 +5,10 @@
 > **Giảng viên phụ trách:** Trương Xuân Nam  
 > **Tài liệu căn cứ:** `Bao_cao_EduCert_Nhom11_Hoan_chinh.docx` (Phiên bản thiết kế v1)
 
+## Chạy EduCert trên máy cá nhân
+
+Xem [hướng dẫn chạy từ bản clone mới](frontend/README.md) để cài gói, khởi động Hardhat, deploy hợp đồng và mở giao diện tại `http://localhost:5173`. Hướng dẫn có kịch bản demo theo từng vai trò và cách xử lý khi cổng local đã được sử dụng.
+
 ## Backend đã triển khai — bắt đầu tích hợp
 
 Phần BE-01 → BE-06 của Nguyễn Văn Trường đã có mã nguồn, 16 endpoint (11 nghiệp vụ + 5 hỗ trợ), SQLite, xác thực ví, kho PDF riêng tư và đối soát blockchain. Hướng dẫn đầy đủ: [backend/README.md](backend/README.md).
@@ -16,15 +20,15 @@ Phần BE-01 → BE-06 của Nguyễn Văn Trường đã có mã nguồn, 16 en
 - [Bằng chứng kiểm thử](docs/TEST_RESULTS.md)
 
 ```powershell
-npm ci
-npm --prefix backend ci
-npm --prefix backend run setup:env
-npm --prefix backend run migrate
+npm.cmd ci
+npm.cmd --prefix backend ci --ignore-scripts
+npm.cmd --prefix backend run setup:env
+npm.cmd --prefix backend run migrate
 ```
 
-Chạy `npx hardhat node` ở terminal riêng; terminal khác chạy `npm run deploy:local`, `npm run export-config`, `npm run setup-demo`, rồi `npm run dev:backend`. API mặc định http://localhost:3001/api/v1. Nếu địa chỉ deploy khác mặc định, đặt CONTRACT_ADDRESS thực tế trước export-config.
+Chạy `npx.cmd hardhat node` ở terminal riêng. Terminal khác chạy `npm.cmd run deploy:local`, `npm.cmd run setup-demo`, rồi `npm.cmd run dev:backend`. API mặc định ở `http://localhost:3001/api/v1`. Nếu địa chỉ deploy khác mặc định, đặt `CONTRACT_ADDRESS` thành địa chỉ thực tế rồi chạy `npm.cmd run export-config` trước `setup-demo`.
 
-Kiểm tra toàn bộ phần hiện có: `npm --prefix backend run verify` (typecheck, client mẫu, build, 20 contract tests và 42 Backend tests). Frontend và 12 UI/E2E tests của nhóm chưa được triển khai trong phần việc Backend.
+Chạy `npm --prefix backend run verify` để kiểm tra typecheck, client mẫu, build, 20 ca smart contract và 42 ca backend. Lệnh kiểm tra frontend nằm trong [frontend/README.md](frontend/README.md).
 
 ---
 
@@ -34,7 +38,7 @@ Kiểm tra toàn bộ phần hiện có: `npm --prefix backend run verify` (type
 | :-: | :--- | :--- | :--- | :--- | :--- |
 | 1 | **Lục Văn Thuận** | `2351170624` | Smart Contract / Blockchain | `SC-01` → `SC-06` | **Đã triển khai** (Contract, Ignition deploy, 20 Unit Tests PASS, đo Gas, xuất ABI/config) |
 | 2 | **Nguyễn Văn Trường** | `2351170625` | Backend / Off-chain & Storage | `BE-01` → `BE-06` | **Đã triển khai để review** — 16 API, SQLite, auth ví, private PDF, finalize/retry, 42 Backend tests; xem tài liệu bàn giao |
-| 3 | **Nguyễn Thế Trưởng** | `2351170626` | Frontend / Tích hợp Web3 | `FE-01` → `FE-06` | Chưa có thư mục `frontend/` — triển khai theo hướng dẫn Mục 4.3 |
+| 3 | **Nguyễn Thế Trưởng** | `2351170626` | Frontend / Tích hợp Web3 | `FE-01` → `FE-06` | Giao diện và tích hợp Web3 trong `frontend/`. Xem [hướng dẫn chạy](frontend/README.md). |
 | 4 | **Hoàng Tùng** | `2351170630` | PDF / QR / E2E / Hồ sơ | `QA-01` → `QA-06` | Đã có đặc tả tích hợp trong `docs/` và PDF adapter cơ bản ở Backend; mẫu hoàn thiện, biên bản và E2E cần tiếp tục theo Mục 4.4 |
 
 > **Lưu ý đánh giá đóng góp (Phụ lục B):** Điểm story point chỉ dùng để cân đối khối lượng. Khi nghiệm thu cuối kỳ, tỷ lệ đóng góp căn cứ trên bằng chứng thực tế: **kết quả chức năng (50%)**, **kiểm thử/chất lượng (20%)**, **tích hợp/review (20%)** và **tài liệu/bàn giao (10%)**.
@@ -62,7 +66,7 @@ EduCert/
 ├── backend/                               # [Đã có] API Express, SQLite, private storage, PDF adapter và tests
 │   ├── src/routes/
 │   └── src/services/
-├── frontend/                              # [Cần tạo] React + Vite + Web3 UI
+├── frontend/                              # [Đã có] React + Vite + Web3 UI
 │   ├── src/pages/
 │   └── src/lib/
 └── docs/                                  # [Đã có] Đặc tả tích hợp, API, quyết định, kế hoạch, bằng chứng và bàn giao Backend
@@ -205,7 +209,7 @@ Mục tiêu của Frontend là cung cấp giao diện tiếng Việt cho 4 tác 
     7. `/dashboard` — Thống kê (`Admin` / `Issuer`).
     8. `/history` — Nhật ký sự kiện (`Tất cả`, phân trang, không PII).
 * **Bước 2 (`FE-02`) — Kết nối ví & Luồng giao dịch Admin / Issuer:**
-  * Trong `frontend/src/lib/`, đọc `abi`, `contractAddress`, `chainId` từ `config/contract-config.json`.
+  * Trong `frontend/src/lib/`, đọc `abi`, `contractAddress`, `chainId` qua `GET /api/v1/config`. Backend lấy cấu hình từ `config/contract-config.json`.
   * Tích hợp `ethers.BrowserProvider` với MetaMask (`CORE-01`): hiển thị tài khoản, phát hiện đổi tài khoản/sai `chainId` và cảnh báo rõ trước khi ký.
   * Trang `/admin` (`CORE-02`): Gọi `grantRole(ISSUER_ROLE, wallet)`, `revokeRole(ISSUER_ROLE, wallet)` và tra cứu `hasRole`.
   * Trang `/issue` (`CORE-03`): Đăng nhập nonce với Backend -> nhập thông tin hoặc upload PDF tạo draft -> hiển thị bản PDF cuối (đã chèn QR) để xem trước -> Frontend tính lại SHA-256 bằng Web Crypto API để đối chiếu với hash draft -> ký `issueCertificate(id, hash, student)` qua MetaMask -> hiển thị `pending` + `txHash` -> chờ receipt -> gọi `POST /api/v1/certificates/:id/finalize`.
