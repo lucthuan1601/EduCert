@@ -9,8 +9,8 @@ Ngày kiểm tra: 23/11/2026. Môi trường local: Windows x64, Node.js v22.17.
 | Build Backend | PASS |
 | Smart contract CT-01 → CT-20 | 20 PASS |
 | Backend BE-01 → BE-10 bắt buộc | 10 PASS |
-| Backend/API bổ sung | 30 PASS |
-| Tổng kiểm thử contract + Backend | 60 PASS, không có ca skip |
+| Backend/API bổ sung | 32 PASS |
+| Tổng kiểm thử contract + Backend | 62 PASS, không có ca skip |
 | PDF tiếng Việt và QR | Render kiểm tra trực quan; lấy lại đúng tên tiếng Việt, giải QR độc lập khớp URL ID |
 
 ## Phạm vi bằng chứng
@@ -22,6 +22,8 @@ Các ca bổ sung kiểm signed PDF, CSRF/Origin, phiên hết hạn, preview ri
 Lượt rà soát tiếp theo bổ sung 9 test: multipart hỏng trả 400; kho PDF không được trỏ qua symlink hoặc tên ..private vào public; nonce gửi đồng thời chỉ tạo một phiên; finalize đồng thời không tạo trùng; ví khác không thể gắn tx vào draft; public lookup hoạt động khi SQLite không có record; thu hồi trước finalize trả REVOKED; thay tx chưa biết bằng giao dịch thật; PDF mã hóa AES-256 thật bị từ chối trước khi lưu.
 
 Hai lỗi multipart/symlink đã được tái hiện bằng test thất bại trước sửa, sau đó kiểm hồi quy trong toàn bộ bộ test. Fixture encrypted-demo.pdf hoàn toàn tổng hợp, không chứa PII và không cần Python để chạy CI.
+
+Review PR #8 của trggg2185 phát hiện draft FAILED giữ txHash khi giao dịch không khớp, khiến draft đúng bị chặn. Hai test mới đã tái hiện 409 trước sửa, sau sửa đều đạt: nhập nhầm tx vào draft khác rồi finalize đúng draft; dữ liệu FAILED cũ qua restart không chặn draft đúng. Bộ Backend hiện có 42 test. Các test RPC/pending/TX_NOT_FOUND được tăng assertion để xác nhận vẫn giữ txHash và chặn draft khác; các test sai contract/reverted xác nhận giải phóng txHash. Bản ghi đã xác nhận vẫn được kiểm chống thay hoặc dùng lại tx.
 
 Lệnh tái hiện: `npm --prefix backend run verify` sau npm ci ở root và backend. Không cần MetaMask hoặc node demo; không cần .env cho bộ test. Báo cáo mới được sinh trong backend/reports. Bản log tại thời điểm bàn giao: [evidence](evidence/). summary JSON ghi thời gian UTC, runtime và exit code thực tế; các duration trong log là thời gian runner, không phải benchmark sản phẩm.
 

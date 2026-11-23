@@ -178,18 +178,23 @@ test('BE-06: anonymous download returns 401', async () => {
 });
 
 test('BE-07: fake txHash never marks the draft ISSUED', async () => {
-  const actor = await login(); const value = await draft(actor);
-  const response = await finalize(actor, value, randomHash()).expect(400);
+  const actor = await login(); const value = await draft(actor); const txHash = randomHash();
+  const response = await finalize(actor, value, txHash).expect(400);
   assert.equal(response.body.error.code, 'TX_NOT_FOUND');
   assert.equal(findCertificate(ctx.db, value.certificateId)?.sync_state, 'FAILED');
+  assert.equal(findCertificate(ctx.db, value.certificateId)?.tx_hash, txHash);
+  const second = await draft(actor);
+  assert.equal((await finalize(actor, second, txHash).expect(409)).body.error.code, 'TX_ALREADY_USED');
 });
 
 test('BE-08: RPC interruption persists pending tx and retry survives restart', async () => {
-  let actor = await login(); const value = await draft(actor); const txHash = await issue(value);
+  let actor = await login(); const value = await draft(actor); const second = await draft(actor); const txHash = await issue(value);
   ctx.chain.issuance = async () => { throw new ApiError(503, 'RPC_ERROR', 'Simulated interruption'); };
   await finalize(actor, value, txHash).expect(503);
   assert.equal(findCertificate(ctx.db, value.certificateId)?.sync_state, 'PENDING_CHAIN');
   assert.equal(findCertificate(ctx.db, value.certificateId)?.tx_hash, txHash);
+  assert.equal((await finalize(actor, second, txHash).expect(409)).body.error.code, 'TX_ALREADY_USED');
+  assert.equal(findCertificate(ctx.db, second.certificateId)?.tx_hash, null);
   ctx.chain.close(); ctx.db.close();
   Object.assign(ctx, createApp(ctx.config));
   actor = await login();
@@ -274,6 +279,7 @@ test('API: a transaction sent to another contract is rejected', async () => {
   await (await registry.getFunction('grantRole')(roleId('ISSUER_ROLE'), ctx.issuer.address)).wait();
   const txHash = await issue(value, { contract: registry });
   assert.equal((await finalize(actor, value, txHash).expect(409)).body.error.code, 'TX_MISMATCH');
+  assert.equal(findCertificate(ctx.db, value.certificateId)?.tx_hash, null);
 });
 
 test('API: transaction sender must match draft issuer', async () => {
@@ -291,13 +297,16 @@ test('API: successful transaction without matching issuance event is rejected', 
 });
 
 test('API: pending receipt returns 202 and later finalizes the same transaction', async () => {
-  const actor = await login(); const value = await draft(actor);
+  const actor = await login(); const value = await draft(actor); const second = await draft(actor);
   await provider.send('evm_setAutomine', [false]);
   let tx: any;
   try {
     tx = await (ctx.registry.connect(ctx.issuer) as Contract).getFunction('issueCertificate')(value.certificateId, value.fileHash, ctx.student.address);
     const response = await finalize(actor, value, tx.hash).expect(202);
     assert.equal(response.body.data.syncState, 'PENDING_CHAIN');
+    assert.equal(response.body.data.txHash, tx.hash);
+    assert.equal((await finalize(actor, second, tx.hash).expect(409)).body.error.code, 'TX_ALREADY_USED');
+    assert.equal(findCertificate(ctx.db, value.certificateId)?.tx_hash, tx.hash);
   } finally { await provider.send('evm_setAutomine', [true]); await provider.send('evm_mine', []); }
   await finalize(actor, value, tx.hash).expect(200);
 });
@@ -311,6 +320,7 @@ test('API: reverted receipt cannot finalize a certificate', async () => {
     await provider.send('evm_mine', []);
   } finally { await provider.send('evm_setAutomine', [true]); }
   assert.equal((await finalize(actor, value, tx.hash).expect(409)).body.error.code, 'TX_FAILED');
+  assert.equal(findCertificate(ctx.db, value.certificateId)?.tx_hash, null);
 });
 
 test('API: public lookup is chain-authoritative and does not expose PII', async () => {
@@ -383,6 +393,41 @@ test('API: receipt cannot be reused for another draft or replace a finalized tx'
   const { actor, value, txHash } = await issued(); const second = await draft(actor);
   assert.equal((await finalize(actor, second, txHash).expect(409)).body.error.code, 'TX_ALREADY_USED');
   assert.equal((await finalize(actor, value, randomHash()).expect(409)).body.error.code, 'TX_ALREADY_BOUND');
+});
+
+test('Finalize: rejected transaction is released so its correct draft can finalize', async () => {
+  const actor = await login(); const correct = await draft(actor); const wrong = await draft(actor);
+  const txHash = await issue(correct);
+  assert.equal((await finalize(actor, wrong, txHash).expect(409)).body.error.code, 'EVENT_MISMATCH');
+  const rejected = await actor.agent.get(`/api/v1/drafts/${wrong.certificateId}`).expect(200);
+  assert.equal(rejected.body.data.syncState, 'FAILED');
+  assert.equal(rejected.body.data.errorCode, 'EVENT_MISMATCH');
+  const response = await finalize(actor, correct, txHash).expect(200);
+  assert.equal(rejected.body.data.txHash, null);
+  assert.equal(response.body.data.syncState, 'ISSUED');
+  assert.equal(response.body.data.txHash, txHash);
+  assert.equal(findCertificate(ctx.db, wrong.certificateId)?.tx_hash, null);
+  const wrongTx = await issue(wrong);
+  assert.equal((await finalize(actor, wrong, wrongTx).expect(200)).body.data.txHash, wrongTx);
+  assert.equal((await request(ctx.app).get('/api/v1/stats').expect(200)).body.data.issued, 2);
+});
+
+test('Finalize: legacy failed mismatch cannot block its correct draft after restart', async () => {
+  let actor = await login(); const correct = await draft(actor); const wrong = await draft(actor);
+  const txHash = await issue(correct);
+  // Reproduce a FAILED binding persisted by the previous backend version.
+  ctx.db.prepare("UPDATE CertificateFile SET tx_hash = ?, sync_state = 'FAILED', error_code = 'EVENT_MISMATCH' WHERE certificate_id = ?")
+    .run(txHash, wrong.certificateId);
+  ctx.chain.close(); ctx.db.close();
+  Object.assign(ctx, createApp(ctx.config));
+  actor = await login();
+  const response = await finalize(actor, correct, txHash).expect(200);
+  assert.equal(response.body.data.syncState, 'ISSUED');
+  assert.equal(response.body.data.txHash, txHash);
+  const rejected = findCertificate(ctx.db, wrong.certificateId)!;
+  assert.equal(rejected.tx_hash, null);
+  assert.equal(rejected.sync_state, 'FAILED');
+  assert.equal(rejected.error_code, 'EVENT_MISMATCH');
 });
 
 test('API: valid historical issuance can reconcile after issuer role removal', async () => {

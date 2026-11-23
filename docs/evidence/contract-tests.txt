@@ -23,4 +23,4 @@
     √ CT-20: Event fields - Đúng ID, issuer, student, fileHash, timestamp
 
 
-  20 passing (827ms)
+  20 passing (777ms)

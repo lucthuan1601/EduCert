@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-11-23T14:01:26.428Z",
+  "measuredAt": "2026-11-23T16:22:12.992Z",
   "node": "v22.17.0",
   "platform": "win32",
   "arch": "x64",
@@ -7,27 +7,27 @@
     {
       "name": "typecheck",
       "exitCode": 0,
-      "durationMs": 224
+      "durationMs": 553
     },
     {
       "name": "frontend-example",
       "exitCode": 0,
-      "durationMs": 162
+      "durationMs": 192
     },
     {
       "name": "build",
       "exitCode": 0,
-      "durationMs": 241
+      "durationMs": 204
     },
     {
       "name": "contract-tests",
       "exitCode": 0,
-      "durationMs": 2963
+      "durationMs": 3055
     },
     {
       "name": "backend-tests",
       "exitCode": 0,
-      "durationMs": 43969
+      "durationMs": 35959
     }
   ]
 }

@@ -99,10 +99,12 @@ POST certificates/:id/finalize nhận `{txHash}`. Backend kiểm mạng, contrac
 | 200 REVOKED | Giao dịch cấp hợp lệ, chứng chỉ hiện đã thu hồi; hiện cảnh báo |
 | 202 PENDING_CHAIN | Đã biết giao dịch nhưng chưa có receipt; gọi lại cùng ID/txHash |
 | 503 RPC_ERROR | Giữ PENDING_CHAIN + txHash; đợi RPC rồi gọi lại, không ký lại |
-| 400 TX_NOT_FOUND | Node chưa biết giao dịch hoặc hash giả; ghi FAILED, có thể thử lại cùng hash khi node nhận giao dịch |
-| 409 TX_FAILED / TX_MISMATCH / EVENT_MISMATCH / CHAIN_STATE_MISMATCH | Không công nhận phát hành; kiểm nguyên nhân, không tự ghi đè hash cũ |
+| 400 TX_NOT_FOUND | Node chưa biết giao dịch hoặc hash giả; ghi FAILED, giữ txHash vì chưa thể kết luận; có thể thử lại cùng hash khi node nhận giao dịch hoặc cung cấp hash đúng |
+| 409 TX_FAILED / TX_MISMATCH / EVENT_MISMATCH / CHAIN_STATE_MISMATCH | Ghi FAILED + errorCode, giải phóng txHash thành null; lấy lại draft để cập nhật UI, rồi cung cấp giao dịch đúng |
 
-Finalize cần chủ draft và chứng cứ giao dịch hợp lệ; vẫn đối soát được giao dịch đã thành công sau khi Issuer bị tước role. Tạo draft mới luôn kiểm role hiện tại. Gọi lại cùng giao dịch không tăng số đã cấp. Không thay txHash bản đã xác nhận; txHash dùng cho draft khác trả TX_ALREADY_USED.
+Finalize cần chủ draft và chứng cứ giao dịch hợp lệ; vẫn đối soát được giao dịch đã thành công sau khi Issuer bị tước role. Tạo draft mới luôn kiểm role hiện tại. Gọi lại cùng giao dịch không tăng số đã cấp. Không thay txHash bản đã xác nhận; txHash còn được draft khác giữ trả TX_ALREADY_USED.
+
+Nhập nhầm txHash của draft A vào draft B không được chặn A sau khi backend đã xác định giao dịch không khớp. Backend chỉ giải phóng liên kết đã bị từ chối dứt điểm; giữ nguyên liên kết khi receipt đang chờ, RPC_ERROR hoặc TX_NOT_FOUND. Khi finalize gặp liên kết FAILED do bốn lỗi dứt điểm trên từ phiên bản cũ, backend dọn liên kết đó trong cùng transaction SQLite trước khi gắn vào draft mới. Không cần xóa dữ liệu hay thay schema. Response lỗi vẫn theo chuẩn success/error; GET /drafts/:id trả trạng thái mới và txHash có thể null như kiểu metadata đã định nghĩa.
 
 Nếu chain đã có dữ liệu sai, xử lý thu hồi/cấp lại theo nghiệp vụ; không sửa bản ghi cũ. Vận hành có thể chạy `npm --prefix backend run reconcile:pending` để đối soát tối đa 100 bản chờ/lần, không ký giao dịch.
 
