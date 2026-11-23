@@ -5,6 +5,27 @@
 > **Giảng viên phụ trách:** Trương Xuân Nam  
 > **Tài liệu căn cứ:** `Bao_cao_EduCert_Nhom11_Hoan_chinh.docx` (Phiên bản thiết kế v1)
 
+## Backend đã triển khai — bắt đầu tích hợp
+
+Phần BE-01 → BE-06 của Nguyễn Văn Trường đã có mã nguồn, 16 endpoint (11 nghiệp vụ + 5 hỗ trợ), SQLite, xác thực ví, kho PDF riêng tư và đối soát blockchain. Hướng dẫn đầy đủ: [backend/README.md](backend/README.md).
+
+- [Kế hoạch theo giai đoạn](docs/BACKEND_PLAN.md)
+- [API và luồng tích hợp Frontend](docs/INTERFACE_CONTRACT.md)
+- [Client TypeScript mẫu](docs/examples/frontend-api.ts)
+- [Tổng hợp công việc và bàn giao](docs/BACKEND_HANDOFF_NGUYEN_VAN_TRUONG.md)
+- [Bằng chứng kiểm thử](docs/TEST_RESULTS.md)
+
+```powershell
+npm ci
+npm --prefix backend ci
+npm --prefix backend run setup:env
+npm --prefix backend run migrate
+```
+
+Chạy `npx hardhat node` ở terminal riêng; terminal khác chạy `npm run deploy:local`, `npm run export-config`, `npm run setup-demo`, rồi `npm run dev:backend`. API mặc định http://localhost:3001/api/v1. Nếu địa chỉ deploy khác mặc định, đặt CONTRACT_ADDRESS thực tế trước export-config.
+
+Kiểm tra toàn bộ phần hiện có: `npm --prefix backend run verify` (typecheck, client mẫu, build, 20 contract tests và 42 Backend tests). Frontend và 12 UI/E2E tests của nhóm chưa được triển khai trong phần việc Backend.
+
 ---
 
 ## 1. Phân công thành viên & Trạng thái hiện tại của Repository
@@ -12,9 +33,9 @@
 | STT | Thành viên | Mã sinh viên | Vai trò phụ trách chính | Backlog (20 điểm/người) | Trạng thái trong repo hiện tại |
 | :-: | :--- | :--- | :--- | :--- | :--- |
 | 1 | **Lục Văn Thuận** | `2351170624` | Smart Contract / Blockchain | `SC-01` → `SC-06` | **Đã triển khai** (Contract, Ignition deploy, 20 Unit Tests PASS, đo Gas, xuất ABI/config) |
-| 2 | **Nguyễn Văn Trường** | `2351170625` | Backend / Off-chain & Storage | `BE-01` → `BE-06` | Chưa có thư mục `backend/` — triển khai theo hướng dẫn Mục 4.2 |
+| 2 | **Nguyễn Văn Trường** | `2351170625` | Backend / Off-chain & Storage | `BE-01` → `BE-06` | **Đã triển khai để review** — 16 API, SQLite, auth ví, private PDF, finalize/retry, 42 Backend tests; xem tài liệu bàn giao |
 | 3 | **Nguyễn Thế Trưởng** | `2351170626` | Frontend / Tích hợp Web3 | `FE-01` → `FE-06` | Chưa có thư mục `frontend/` — triển khai theo hướng dẫn Mục 4.3 |
-| 4 | **Hoàng Tùng** | `2351170630` | PDF / QR / E2E / Hồ sơ | `QA-01` → `QA-06` | Chưa có thư mục `docs/` & bộ E2E — triển khai theo hướng dẫn Mục 4.4 |
+| 4 | **Hoàng Tùng** | `2351170630` | PDF / QR / E2E / Hồ sơ | `QA-01` → `QA-06` | Đã có đặc tả tích hợp trong `docs/` và PDF adapter cơ bản ở Backend; mẫu hoàn thiện, biên bản và E2E cần tiếp tục theo Mục 4.4 |
 
 > **Lưu ý đánh giá đóng góp (Phụ lục B):** Điểm story point chỉ dùng để cân đối khối lượng. Khi nghiệm thu cuối kỳ, tỷ lệ đóng góp căn cứ trên bằng chứng thực tế: **kết quả chức năng (50%)**, **kiểm thử/chất lượng (20%)**, **tích hợp/review (20%)** và **tài liệu/bàn giao (10%)**.
 
@@ -38,13 +59,13 @@ EduCert/
 │   └── measure-gas.js                     # [Đã có] Đo gasUsed thực tế từ receipt
 ├── config/contract-config.json            # [Đã có] Cấu hình chung cho BE & FE
 ├── hardhat.config.js & package.json       # [Đã có] Cấu hình Hardhat & scripts gốc
-├── backend/                               # [Cần tạo] API Express, SQLite, private storage
+├── backend/                               # [Đã có] API Express, SQLite, private storage, PDF adapter và tests
 │   ├── src/routes/
 │   └── src/services/
 ├── frontend/                              # [Cần tạo] React + Vite + Web3 UI
 │   ├── src/pages/
 │   └── src/lib/
-└── docs/                                  # [Cần tạo] PROJECT_SPEC, ARCHITECTURE, INTERFACE_CONTRACT, DECISIONS, Test Plan
+└── docs/                                  # [Đã có] Đặc tả tích hợp, API, quyết định, kế hoạch, bằng chứng và bàn giao Backend
 ```
 
 ### 2.2. Các nguyên tắc bất biến trong v1
@@ -129,6 +150,8 @@ Trước khi tách nhánh code song song, **4/4 thành viên** thực hiện cù
 ### 4.2. Nguyễn Văn Trường (`2351170625`) — Backend / Off-chain (Mốc M2: `BE-01` → `BE-06`)
 
 Mục tiêu của Backend là quản lý xác thực ví, tạo bản nháp PDF/QR, lưu trữ PDF riêng tư có phân quyền và đối soát receipt on-chain trước khi công nhận `ISSUED`.
+
+> **Trạng thái:** Đã triển khai theo các bước dưới đây. Cách dùng thực tế và API xem `backend/README.md` và `docs/INTERFACE_CONTRACT.md`. Bộ 42 test gồm 10 tình huống BE bắt buộc và 32 kiểm tra bổ sung; không thay thế E2E giao diện.
 
 #### Các bước thực hiện
 * **Bước 1 (`BE-01`) — Khởi tạo `backend/` (Express + TypeScript + SQLite):**

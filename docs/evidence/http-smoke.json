@@ -1,0 +1,5 @@
+{
+  "compiledServerHttpHealth": true,
+  "configOverHttp": true,
+  "chainId": 31337
+}

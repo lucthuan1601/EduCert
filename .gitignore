@@ -13,6 +13,7 @@ ignition/deployments/
 dist/
 build/
 backend/dist/
+backend/reports/
 frontend/dist/
 
 # Environment & secrets (DO NOT COMMIT)
@@ -29,6 +30,10 @@ backend/uploads/
 *.sqlite3
 *.db
 *.db-journal
+*.sqlite-wal
+*.sqlite-shm
+*.db-wal
+*.db-shm
 
 # Logs & temporary files
 *.log
