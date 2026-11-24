@@ -1,0 +1,89 @@
+{
+  "reports": {
+    "valid": {
+      "certificateId": "0x38f9c964b8bd7689be9bde9ebff2649a34465ce53e062178f6a4b7f642ee260a",
+      "chainId": 31337,
+      "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "blockNumber": 4,
+      "checkedAt": "2026-11-24T05:02:28.758Z",
+      "issuer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+      "student": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+      "fileHash": "0x581a393ad70ff4870c4b4c58194c3d722dd2f9426195c9a658840c6574f80901",
+      "issuedAt": "2026-11-24T05:02:20.000Z",
+      "status": "REGISTERED_ACTIVE",
+      "revokedAt": null,
+      "revokeReasonCode": 0,
+      "fileResult": "MATCH",
+      "candidateHash": "0x581a393ad70ff4870c4b4c58194c3d722dd2f9426195c9a658840c6574f80901",
+      "verifyCode": 1
+    },
+    "revokedTampered": {
+      "certificateId": "0x38f9c964b8bd7689be9bde9ebff2649a34465ce53e062178f6a4b7f642ee260a",
+      "chainId": 31337,
+      "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "blockNumber": 6,
+      "checkedAt": "2026-11-24T05:02:34.416Z",
+      "issuer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+      "student": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+      "fileHash": "0x581a393ad70ff4870c4b4c58194c3d722dd2f9426195c9a658840c6574f80901",
+      "issuedAt": "2026-11-24T05:02:20.000Z",
+      "status": "REVOKED",
+      "revokedAt": "2026-11-24T05:02:34.000Z",
+      "revokeReasonCode": 1,
+      "fileResult": "FILE_HASH_MISMATCH",
+      "candidateHash": "0xfdf459fd748a52b6106288b106e72ee35aea3f31c62faec39a5a88bc314b62ca",
+      "verifyCode": 2
+    }
+  },
+  "startedAt": "2026-11-24T05:02:16.622Z",
+  "certificateId": "0x38f9c964b8bd7689be9bde9ebff2649a34465ce53e062178f6a4b7f642ee260a",
+  "fileHash": "0x581a393ad70ff4870c4b4c58194c3d722dd2f9426195c9a658840c6574f80901",
+  "uploadCertificateId": "0x06279a33abdfdf92ef628effe2f4e295c9aecb94bf8f39b4f28916ec787fd345",
+  "finishedAt": "2026-11-24T05:02:41.873Z",
+  "chainId": 31337,
+  "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "wallets": {
+    "admin": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    "issuer": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    "student": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+    "otherStudent": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+    "newIssuer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65"
+  },
+  "events": [
+    {
+      "type": "REVOKED",
+      "certificateId": "0x38f9c964b8bd7689be9bde9ebff2649a34465ce53e062178f6a4b7f642ee260a",
+      "txHash": "0x3794d492cd2d4686b039b77bb24686e0275eb1c25f490351fe049ea1ab5c15d9",
+      "blockNumber": 6,
+      "blockHash": "0x4db852d767e66d6a9c949a49133e426b2404b932c7ec2d5df5f957e763e93383",
+      "logIndex": 0,
+      "revokedBy": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+      "revokeReasonCode": 1,
+      "revokedAt": "2026-11-24T05:02:34.000Z"
+    },
+    {
+      "type": "ISSUED",
+      "certificateId": "0x06279a33abdfdf92ef628effe2f4e295c9aecb94bf8f39b4f28916ec787fd345",
+      "txHash": "0xc0ca579513e509555e5236a3b0616d520ea44adb6684e258761cb0f7ae288f7f",
+      "blockNumber": 5,
+      "blockHash": "0xc459ed5e832706075b1413aa7ad204f7c2f3cbb0a3a5afee5545b74ac0ca64c8",
+      "logIndex": 0,
+      "issuer": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+      "student": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+      "fileHash": "0x08e54bb9f3fb276ea42c375893fb674ae4f3f2efef0e58be9f6dc12f611f7e9c",
+      "issuedAt": "2026-11-24T05:02:31.000Z"
+    },
+    {
+      "type": "ISSUED",
+      "certificateId": "0x38f9c964b8bd7689be9bde9ebff2649a34465ce53e062178f6a4b7f642ee260a",
+      "txHash": "0x1d4f40c504b168865e213c1f98718173d5ee68eaaab54e1cbd4e3a4357746ebd",
+      "blockNumber": 4,
+      "blockHash": "0xd2e1e5221d738d484b74e9b55d721b0453a2a9048078fb1af495f795b93fa2a4",
+      "logIndex": 0,
+      "issuer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+      "student": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+      "fileHash": "0x581a393ad70ff4870c4b4c58194c3d722dd2f9426195c9a658840c6574f80901",
+      "issuedAt": "2026-11-24T05:02:20.000Z"
+    }
+  ]
+}

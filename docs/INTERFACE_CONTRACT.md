@@ -35,8 +35,13 @@ Các đường dẫn đều sau /api/v1. Session là ví đã ký đăng nhập.
 | GET | `/me/certificates` | Session | 200: danh sách của ví phiên |
 | GET | `/stats` | Public | 200: counters chain |
 | GET | `/events` | Public | 200: event phân trang |
+| GET | `/certificates/:id/verification-report` | Public, rate limit 30/phút | 200: PDF biên bản (attachment); 404: NOT_FOUND; 503: RPC_ERROR |
 
-Giữ 11 endpoint nghiệp vụ theo README; 5 endpoint hỗ trợ là health, config, auth/me, auth/logout và preview.
+Giữ 11 endpoint nghiệp vụ theo README; 5 endpoint hỗ trợ là health, config, auth/me, auth/logout và preview. QA-02 bổ sung endpoint mở rộng `verification-report` (EXT-04).
+
+### Biên bản xác minh (QA-02)
+
+`GET /certificates/:id/verification-report?fileHash=<0x…64 hex>` — `fileHash` tùy chọn, là SHA-256 do trình duyệt tính; Backend **không nhận nội dung PDF**. Backend đọc `getCertificate` tại một khối cố định rồi trả PDF gồm: certificateId, chainId, contractAddress, số khối, issuer, ví người nhận, thời gian cấp/thu hồi, fileHash tham chiếu, hash đối chiếu, kết quả `NOT_CHECKED | MATCH | FILE_HASH_MISMATCH`, mã `verifyCertificate` tương ứng, thời điểm đọc (UTC và UTC+7), QR tra cứu và câu chú thích pháp lý. Thu hồi và sai hash được ghi đồng thời. Metadata `Subject` chứa JSON tóm tắt; header `X-Report-Fingerprint` là SHA-256 của JSON đó và được in trên biên bản. Không chứa tên sinh viên hoặc dữ liệu SQLite. Query lạ trả 400; ID không có trên chain trả 404 JSON, lỗi RPC trả 503 `RPC_ERROR` — không tạo biên bản trong hai trường hợp này.
 
 ## 3. Đăng nhập
 

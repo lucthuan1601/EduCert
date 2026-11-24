@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react'
 import type { FormEvent } from 'react'
-import { BadgeCheck, FileCheck2, FileUp, Fingerprint, Printer, QrCode, ScanLine, Search, ShieldCheck } from 'lucide-react'
+import { BadgeCheck, FileCheck2, FileDown, FileUp, Fingerprint, Printer, QrCode, ScanLine, Search, ShieldCheck } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router'
 import { QrScanner, VerifyQr } from '../components/qr'
 import { Busy, CopyValue, Empty, Notice, PageHeading, PanelHeading, Pill, ResourceError } from '../components/ui'
+import { api } from '../lib/api'
 import type { BackendConfig } from '../lib/api'
 import { certificateId, pdfHash, readCertificate, reasonLabel, validatePdf } from '../lib/chain'
 import type { ChainCertificate } from '../lib/chain'
@@ -18,6 +19,8 @@ function VerifyDetails({ id, config }: { id: string; config: BackendConfig }) {
   const [comparison, setComparison] = useState<Comparison | null>(null)
   const [checking, setChecking] = useState(false)
   const [fault, setFault] = useState('')
+  const [reporting, setReporting] = useState(false)
+  const [reportFault, setReportFault] = useState('')
   const cert = comparison?.certificate ?? result.data?.certificate
   const checkedAt = comparison?.checkedAt ?? result.data?.checkedAt
   const matches = comparison && comparison.hash === cert?.fileHash
@@ -34,6 +37,24 @@ function VerifyDetails({ id, config }: { id: string; config: BackendConfig }) {
       setComparison({ hash, certificate: record, checkedAt: new Date().toISOString(), name: file.name })
     } catch (error) { setFault(message(error)) }
     finally { setChecking(false) }
+  }
+
+  // The backend re-reads the chain when rendering; only the browser-computed hash is sent, never the PDF.
+  async function downloadReport() {
+    setReporting(true)
+    setReportFault('')
+    try {
+      const blob = await api.report(id, comparison?.hash)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'educert-bien-ban-' + id.slice(2, 10) + '.pdf'
+      document.body.append(link)
+      link.click()
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch (error) { setReportFault(message(error)) }
+    finally { setReporting(false) }
   }
 
   if (result.loading) return <section className="panel"><Busy>Đang đọc blockchain…</Busy></section>
@@ -74,7 +95,11 @@ function VerifyDetails({ id, config }: { id: string; config: BackendConfig }) {
         </Notice>
         <dl className="facts"><div><dt>SHA-256 của tệp</dt><dd><CopyValue value={comparison.hash} label="Sao chép SHA-256 của tệp" compact /></dd></div></dl>
       </> : <Notice><strong>Chưa đối chiếu tệp PDF.</strong><p>Tra cứu ID xác nhận trạng thái bản ghi. Hãy chọn PDF để kiểm tra tệp.</p></Notice>}
-      <button type="button" className="button secondary small" onClick={() => window.print()} disabled={checking}><Printer size={17} /> In hoặc lưu biên bản PDF</button>
+      <div className="button-row">
+        <button type="button" className="button primary small" onClick={() => void downloadReport()} disabled={checking || reporting}><FileDown size={17} />{reporting ? 'Đang tạo biên bản…' : 'Tải biên bản PDF'}</button>
+        <button type="button" className="button secondary small" onClick={() => window.print()} disabled={checking}><Printer size={17} /> In trang</button>
+      </div>
+      {reportFault && <Notice tone="error">{reportFault}</Notice>}
     </section>
     <article className="print-report">
       <p>EduCert</p><h1>Biên bản xác minh chứng chỉ</h1>
@@ -137,7 +162,7 @@ function VerifyLookup({ routeId }: { routeId?: string }) {
       : <ResourceError error={portal.configError} retry={portal.reloadConfig} /> : !fault && <div className="verify-hints">
       <div><FileCheck2 size={22} /><span><strong>Đọc bản ghi công khai</strong><small>Kiểm tra trạng thái cấp hoặc thu hồi theo mã chứng chỉ.</small></span></div>
       <div><ShieldCheck size={22} /><span><strong>Kiểm tra toàn vẹn</strong><small>PDF được băm tại thiết bị của bạn.</small></span></div>
-      <div><BadgeCheck size={22} /><span><strong>Ghi nhận kết quả</strong><small>In hoặc lưu biên bản từ trang xác minh.</small></span></div>
+      <div><BadgeCheck size={22} /><span><strong>Ghi nhận kết quả</strong><small>Tải biên bản PDF đọc trực tiếp từ blockchain.</small></span></div>
     </div>}
   </div>
 }

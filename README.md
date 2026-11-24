@@ -28,7 +28,26 @@ npm.cmd --prefix backend run migrate
 
 Chạy `npx.cmd hardhat node` ở terminal riêng. Terminal khác chạy `npm.cmd run deploy:local`, `npm.cmd run setup-demo`, rồi `npm.cmd run dev:backend`. API mặc định ở `http://localhost:3001/api/v1`. Nếu địa chỉ deploy khác mặc định, đặt `CONTRACT_ADDRESS` thành địa chỉ thực tế rồi chạy `npm.cmd run export-config` trước `setup-demo`.
 
-Chạy `npm --prefix backend run verify` để kiểm tra typecheck, client mẫu, build, 20 ca smart contract và 42 ca backend. Lệnh kiểm tra frontend nằm trong [frontend/README.md](frontend/README.md).
+Chạy `npm --prefix backend run verify` để kiểm tra typecheck, client mẫu, build, 20 ca smart contract và 51 ca backend (42 BE + 6 mẫu PDF/QR + 3 biên bản). Lệnh kiểm tra frontend nằm trong [frontend/README.md](frontend/README.md).
+
+## PDF, biên bản, E2E và hồ sơ nghiệm thu (QA-01 → QA-06)
+
+Phần của Hoàng Tùng đã triển khai và chạy thật. Kết quả tổng hợp: **42/42 ca theo Bảng 17 PASS** (20 contract + 10 Backend/API + 12 E2E), kèm 42 ca bổ sung.
+
+- [Kết quả kiểm thử và số liệu thực nghiệm (Bảng 17, 18)](docs/EXPERIMENT_RESULTS.md)
+- [Biên bản kiểm thử E2E-01 → E2E-12](docs/E2E_TEST_REPORT.md) và [ảnh, PDF minh chứng](docs/evidence/e2e/)
+- [Sơ đồ use case, kiến trúc, vòng đời, tuần tự](docs/DIAGRAMS.md)
+- [Nội dung cập nhật Chương 4–5 của báo cáo](docs/REPORT_CH4_5_UPDATE.md)
+- [Rà soát PR và đối chiếu Phụ lục D](docs/QA_REVIEW.md)
+- [Hướng dẫn E2E, dữ liệu demo, đo đạc](e2e/README.md)
+
+```powershell
+npm.cmd --prefix e2e ci
+$env:PW_CHANNEL = 'chrome'      # hoặc: npx.cmd --prefix e2e playwright install chromium
+npm.cmd run test:e2e            # 13 ca E2E trên stack riêng (cổng 8546/3101/5175)
+npm.cmd run measure:e2e         # đo thời gian băm PDF và đọc chain
+npm.cmd run demo-data           # khi stack demo đang chạy: tạo PDF hợp lệ + PDF đã sửa
+```
 
 ---
 
@@ -39,7 +58,7 @@ Chạy `npm --prefix backend run verify` để kiểm tra typecheck, client mẫ
 | 1 | **Lục Văn Thuận** | `2351170624` | Smart Contract / Blockchain | `SC-01` → `SC-06` | **Đã triển khai** (Contract, Ignition deploy, 20 Unit Tests PASS, đo Gas, xuất ABI/config) |
 | 2 | **Nguyễn Văn Trường** | `2351170625` | Backend / Off-chain & Storage | `BE-01` → `BE-06` | **Đã triển khai để review** — 16 API, SQLite, auth ví, private PDF, finalize/retry, 42 Backend tests; xem tài liệu bàn giao |
 | 3 | **Nguyễn Thế Trưởng** | `2351170626` | Frontend / Tích hợp Web3 | `FE-01` → `FE-06` | Giao diện và tích hợp Web3 trong `frontend/`. Xem [hướng dẫn chạy](frontend/README.md). |
-| 4 | **Hoàng Tùng** | `2351170630` | PDF / QR / E2E / Hồ sơ | `QA-01` → `QA-06` | Đã có đặc tả tích hợp trong `docs/` và PDF adapter cơ bản ở Backend; mẫu hoàn thiện, biên bản và E2E cần tiếp tục theo Mục 4.4 |
+| 4 | **Hoàng Tùng** | `2351170630` | PDF / QR / E2E / Hồ sơ | `QA-01` → `QA-06` | **Đã triển khai** — mẫu PDF/QR, biên bản xác minh PDF, 13 E2E PASS, dữ liệu demo, 6 sơ đồ, số đo Bảng 18, rà soát Phụ lục D |
 
 > **Lưu ý đánh giá đóng góp (Phụ lục B):** Điểm story point chỉ dùng để cân đối khối lượng. Khi nghiệm thu cuối kỳ, tỷ lệ đóng góp căn cứ trên bằng chứng thực tế: **kết quả chức năng (50%)**, **kiểm thử/chất lượng (20%)**, **tích hợp/review (20%)** và **tài liệu/bàn giao (10%)**.
 
@@ -67,6 +86,7 @@ EduCert/
 │   ├── src/routes/
 │   └── src/services/
 ├── frontend/                              # [Đã có] React + Vite + Web3 UI
+├── e2e/                                   # [Đã có] Playwright E2E, dữ liệu demo, đo đạc, vẽ sơ đồ (QA)
 │   ├── src/pages/
 │   └── src/lib/
 └── docs/                                  # [Đã có] Đặc tả tích hợp, API, quyết định, kế hoạch, bằng chứng và bàn giao Backend
@@ -235,6 +255,8 @@ Mục tiêu của Frontend là cung cấp giao diện tiếng Việt cho 4 tác 
 
 Mục tiêu của QA/Tài liệu là đảm bảo module tạo PDF/QR và biên bản hoạt động đúng quy tắc băm, xây dựng bộ test E2E + dữ liệu thực nghiệm thật và hoàn thiện hồ sơ nghiệm thu.
 
+> **Trạng thái:** Đã triển khai QA-01 → QA-06: `backend/src/services/pdf-template.ts`, `backend/src/services/verification-report.ts`, thư mục `e2e/` và các tài liệu liệt kê ở đầu README. Hạng mục còn lại cần người thật thực hiện: MetaMask thật, quét QR bằng điện thoại, chạy lại trên máy khác.
+
 #### Các bước thực hiện
 * **Bước 1 (`QA-01`) — Module tạo PDF mẫu & Chèn mã QR (`EXT-01`, `EXT-03`):**
   * Cài đặt bằng `pdf-lib` và thư viện QR:
@@ -271,12 +293,12 @@ Mục tiêu của QA/Tài liệu là đảm bảo module tạo PDF/QR và biên 
 | **M4** | Nghiệm thu | Máy khác clone repo và làm theo `README.md` chạy được đủ 3 mô-đun; hoàn tất 42 ca test có log; đo gas + thời gian thực nghiệm; chụp ảnh/video demo các ca thành công & ca lỗi; cập nhật báo cáo Chương 4–5. |
 
 ### Checklist hồ sơ minh chứng trước khi nộp cuối kỳ (Mục 4.8)
-- [ ] Mã nguồn GitHub đầy đủ lịch sử commit/PR của 4 thành viên, có lockfile phiên bản (`package-lock.json`) và `README.md` chạy lại được trên máy khác.
-- [ ] Danh sách ABI, `contractAddress`, `chainId` và `transaction hash` của phiên chạy demo.
-- [ ] Ảnh chụp giao diện thật theo luồng: Admin cấp role, Issuer phát hành, Student tải PDF, Verifier tra cứu QR/PDF hợp lệ, cảnh báo `FILE_HASH_MISMATCH`, thu hồi `REVOKED`, Dashboard & History.
-- [ ] Log chạy thực tế cho 42 ca kiểm thử (**20 Contract** + **10 Backend/API** + **12 E2E**).
-- [ ] Bảng số liệu thực nghiệm (**Bảng 18**: `gasUsed`, thời gian băm PDF, thời gian đọc RPC) kèm thông số môi trường (phiên bản Solidity, optimizer, Hardhat, Node.js, chainId, commit).
-- [ ] Bộ tệp minh chứng: PDF chứng chỉ mẫu có QR, PDF đã bị sửa nội dung, và PDF biên bản xác minh xuất từ hệ thống.
+- [ ] Mã nguồn GitHub đầy đủ lịch sử commit/PR của 4 thành viên, có lockfile phiên bản (`package-lock.json`) và `README.md` chạy lại được trên máy khác. *(Đã có commit/PR và lockfile; chưa ghi nhận lần chạy trên máy khác.)*
+- [x] Danh sách ABI, `contractAddress`, `chainId` và `transaction hash` của phiên chạy demo — [`run-summary.json`](docs/evidence/e2e/run-summary.json).
+- [x] Ảnh chụp giao diện thật theo luồng: Admin cấp role, Issuer phát hành, Student tải PDF, Verifier tra cứu QR/PDF hợp lệ, cảnh báo `FILE_HASH_MISMATCH`, thu hồi `REVOKED`, Dashboard & History — [`screenshots/`](docs/evidence/e2e/screenshots/).
+- [x] Log chạy thực tế cho 42 ca kiểm thử (**20 Contract** + **10 Backend/API** + **12 E2E**) — [`docs/evidence/final/`](docs/evidence/final/).
+- [x] Bảng số liệu thực nghiệm (**Bảng 18**: `gasUsed`, thời gian băm PDF, thời gian đọc RPC) kèm thông số môi trường — [EXPERIMENT_RESULTS.md](docs/EXPERIMENT_RESULTS.md).
+- [x] Bộ tệp minh chứng: PDF chứng chỉ mẫu có QR, PDF đã bị sửa nội dung, và PDF biên bản xác minh xuất từ hệ thống — [`docs/evidence/e2e/`](docs/evidence/e2e/).
 
 ---
 
@@ -289,4 +311,7 @@ npm run measure-gas    # Đo gasUsed thực tế (grantRole, issueCertificate, r
 npx hardhat node       # Khởi động mạng Hardhat local tại http://127.0.0.1:8545 (chainId 31337)
 npm run deploy:local   # Deploy hợp đồng qua Hardhat Ignition vào mạng localhost
 npm run export-config  # Xuất ABI, chainId, địa chỉ hợp đồng ra config/contract-config.json
+npm run test:e2e       # 13 ca E2E Playwright trên stack riêng (cần npm --prefix e2e ci)
+npm run measure:e2e    # Đo thời gian băm PDF và đọc chain (Bảng 18)
+npm run demo-data      # Tạo chứng chỉ demo + PDF đã sửa trên stack demo đang chạy
 ```

@@ -42,3 +42,7 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 extract_docx.ps1
+
+# E2E runtime state, logs and HTML report (QA-03)
+e2e/.tmp/
+e2e/reports/

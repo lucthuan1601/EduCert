@@ -1,0 +1,17 @@
+Playwright 1.57.0 · start 2026-11-24T05:02:10.669Z · 32144 ms
+
+PASS  E2E-01: Admin → Issuer → Student → Verifier completes the whole flow with the right roles  (5677 ms)
+PASS  E2E-02: public lookup works without a wallet and reads the on-chain record  (1066 ms)
+PASS  E2E-03: the QR inside the issued PDF opens /verify/{certificateId}  (802 ms)
+PASS  E2E-04: the original PDF matches the registered hash and is not revoked  (1016 ms)
+PASS  E2E-05: an edited PDF is reported as FILE_HASH_MISMATCH  (969 ms)
+PASS  E2E-07: looking up only the ID never claims that a PDF was verified  (1472 ms)
+PASS  E2E-08: the exported report has time, chainId, ID and status  (1308 ms)
+PASS  E2E-01b: upload mode issues a second certificate after a rejected signature  (3035 ms)
+PASS  E2E-06: after revocation the verifier sees REVOKED, together with a hash mismatch when both apply  (2557 ms)
+PASS  E2E-09: dashboard counters satisfy issued = active + revoked and match the contract  (1109 ms)
+PASS  E2E-10: wrong network, lost RPC and rejected signatures show clear errors, never NOT_FOUND  (3346 ms)
+PASS  E2E-11: another student wallet cannot list or download someone else's certificate  (1092 ms)
+PASS  E2E-12: downloading again keeps the registered hash byte-for-byte, also after revocation  (1380 ms)
+
+expected=13 unexpected=0 skipped=0 flaky=0

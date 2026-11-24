@@ -2,7 +2,7 @@ name: Backend and contract checks
 
 on:
   push:
-    branches: [main, 'feature/BE-*']
+    branches: [main, 'feature/BE-*', 'feature/FE-*', 'feature/QA-*']
   pull_request:
     branches: [main]
 
@@ -30,3 +30,38 @@ jobs:
         with:
           name: educert-backend-verification
           path: backend/reports/
+
+  # QA-03: frontend checks and Playwright E2E-01 → E2E-12 on an isolated Hardhat/backend/Vite stack.
+  e2e:
+    runs-on: ubuntu-24.04  # Playwright 1.57 has no Chromium build for ubuntu-latest (26.04)
+    timeout-minutes: 20
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+            frontend/package-lock.json
+            e2e/package-lock.json
+      - run: npm ci
+      - run: npm run compile
+      - run: npm --prefix backend ci
+      - run: npm --prefix frontend ci
+      - run: npm --prefix frontend run lint
+      - run: npm --prefix frontend run build
+      - run: npm --prefix e2e ci
+      - run: npx --prefix e2e playwright install --with-deps chromium
+      - run: npm --prefix e2e test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: educert-e2e
+          path: |
+            docs/evidence/e2e/
+            e2e/reports/html/
+            e2e/.tmp/*.log
+            e2e/.tmp/test-results/

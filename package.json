@@ -12,7 +12,10 @@
     "measure-gas": "hardhat run scripts/measure-gas.js --network hardhat",
     "dev:backend": "npm --prefix backend run dev",
     "build:backend": "npm --prefix backend run build",
-    "test:backend": "npm --prefix backend test"
+    "test:backend": "npm --prefix backend test",
+    "test:e2e": "npm --prefix e2e test",
+    "measure:e2e": "npm --prefix e2e run measure",
+    "demo-data": "npm --prefix e2e run demo-data"
   },
   "keywords": [
     "blockchain",

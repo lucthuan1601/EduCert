@@ -1,0 +1,26 @@
+{
+  "name": "@educert/e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "EduCert end-to-end tests (E2E-01 → E2E-12), demo data and measurements — QA, Hoàng Tùng",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "test": "playwright test --project=e2e",
+    "measure": "playwright test --project=measure",
+    "demo-data": "tsx demo-data.ts",
+    "diagrams": "tsx render-diagrams.ts",
+    "report": "playwright show-report reports/html"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^22.20.5",
+    "ethers": "^6.17.0",
+    "mermaid": "^11.4.1",
+    "pdf-lib": "^1.17.1",
+    "tsx": "^4.23.15",
+    "typescript": "~7.0.2"
+  }
+}

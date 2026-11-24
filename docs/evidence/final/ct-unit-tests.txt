@@ -1,0 +1,27 @@
+
+
+  EduCert - CertificateRegistry Smart Contract (Lục Văn Thuận - 2351170624)
+    ✔ CT-01: Deployer tạo contract - Admin role tồn tại đúng cấu hình
+    ✔ CT-02: Admin cấp Issuer role - Cấp thành công, phát ra RoleGranted
+    ✔ CT-03: Người lạ cấp role - Bị Revert
+    ✔ CT-04: Issuer đăng ký hợp lệ - Bản ghi tồn tại, thông tin đúng
+    ✔ CT-05: Người không có role issue - Revert, không ghi dữ liệu
+    ✔ CT-06: Trùng certificateId - Revert
+    ✔ CT-07: Trùng fileHash khác ID - Revert
+    ✔ CT-08: ID/hash/student rỗng - Revert theo từng điều kiện
+    ✔ CT-09: Tra cứu ID không có - exists=false, verify trả về 0 (NOT_FOUND)
+    ✔ CT-10: Candidate hash đúng - verify trả về 1 (VALID)
+    ✔ CT-11: Candidate hash sai - verify trả về 3 (FILE_HASH_MISMATCH)
+    ✔ CT-12: Issuer gốc thu hồi - revoked=true, phát event CertificateRevoked và lưu timestamp
+    ✔ CT-13: Issuer khác thu hồi - Bị Revert Unauthorized
+    ✔ CT-14: Thu hồi lần hai - Bị Revert
+    ✔ CT-15: Admin thu hồi - Thành công
+    ✔ CT-16: Tước role của Issuer - Không cấp mới; bản cũ không tự thu hồi
+    ✔ CT-17: Danh sách Student phân trang - Đúng limit/offset
+    ✔ CT-18: Thống kê sau cấp và thu hồi - issued = active + revoked
+    ✔ CT-19: Reason code không hợp lệ (0 hoặc 5) - Bị Revert
+    ✔ CT-20: Event fields - Đúng ID, issuer, student, fileHash, timestamp
+
+
+  20 passing (631ms)
+
