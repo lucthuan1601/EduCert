@@ -156,6 +156,8 @@ export const api = {
   finalize: (id: string, txHash: string, csrf: string) =>
     json<CertificateMetadata>('/certificates/' + encodeURIComponent(id) + '/finalize', { txHash }, csrf),
   download: (id: string) => pdf('/certificates/' + encodeURIComponent(id) + '/download'),
+  report: (id: string, fileHash?: string) =>
+    pdf('/certificates/' + encodeURIComponent(id) + '/verification-report' + (fileHash ? '?fileHash=' + encodeURIComponent(fileHash) : '')),
   student: (offset: number, limit: number) =>
     json<Page<StudentCertificate>>('/me/certificates?offset=' + offset + '&limit=' + limit),
   stats: () => json<Stats>('/stats'),

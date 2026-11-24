@@ -15,6 +15,7 @@ import { mountFiles } from './routes/files.js';
 import { TemplatePdfAdapter } from './services/pdf-template.js';
 import { mountDrafts } from './routes/drafts.js';
 import { mountQueries } from './routes/queries.js';
+import { mountReports } from './routes/reports.js';
 
 export function createApp(config: AppConfig, database?: Database.Database) {
   const db = database ?? openDatabase(config.databasePath);
@@ -29,7 +30,7 @@ export function createApp(config: AppConfig, database?: Database.Database) {
       else callback(new ApiError(403, 'ORIGIN_NOT_ALLOWED', 'Origin is not allowed'));
     },
     credentials: true, methods: ['GET', 'POST', 'OPTIONS'], allowedHeaders: ['Content-Type', 'X-CSRF-Token'],
-    exposedHeaders: ['X-File-Hash', 'Content-Disposition'],
+    exposedHeaders: ['X-File-Hash', 'X-Report-Fingerprint', 'Content-Disposition'],
   }));
   app.use(express.json({ limit: '64kb' }));
   app.use(cookieParser());
@@ -46,6 +47,7 @@ export function createApp(config: AppConfig, database?: Database.Database) {
   mountFiles(api, config, db, auth, chain, storage);
   mountDrafts(api, config, db, auth, chain, storage, new TemplatePdfAdapter());
   mountQueries(api, config, db, auth, chain);
+  mountReports(api, config, chain);
 
   app.use((_req, _res, next) => next(new ApiError(404, 'ROUTE_NOT_FOUND', 'Route not found')));
   app.use(errorHandler);

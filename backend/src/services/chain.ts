@@ -46,6 +46,15 @@ export class ChainService {
     return this.rpc(async () => this.mapCertificate(await this.contract.getFunction('getCertificate')(certificateId)));
   }
 
+  /** Read a certificate pinned to one block so a report can cite exactly what it saw. */
+  async certificateSnapshot(certificateId: string): Promise<ChainCertificate & { blockNumber: number }> {
+    return this.rpc(async () => {
+      const blockNumber = await this.provider.getBlockNumber();
+      const raw = await this.contract.getFunction('getCertificate')(certificateId, { blockTag: blockNumber });
+      return { ...this.mapCertificate(raw), blockNumber };
+    });
+  }
+
   async issuance(txHash: string, expected: IssuanceExpectation): Promise<ChainCertificate | null> {
     return this.rpc(async () => {
       const [tx, receipt] = await Promise.all([this.provider.getTransaction(txHash), this.provider.getTransactionReceipt(txHash)]);

@@ -16,6 +16,8 @@ import { type AppConfig, MAX_PDF_BYTES } from '../src/config.js';
 import { findCertificate } from '../src/database.js';
 import { ApiError } from '../src/errors.js';
 import { PrivateStorage, sha256 } from '../src/services/storage.js';
+import { REPORT_DISCLAIMER } from '../src/services/verification-report.js';
+import { decodePdfQrCodes, readPdfText } from './helpers/pdf-inspect.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const origin = 'http://localhost:5173';
@@ -533,4 +535,61 @@ test('PDF: an actual encrypted PDF is rejected before storage', async () => {
     .attach('file', source, { filename: 'encrypted.pdf', contentType: 'application/pdf' }).expect(400);
   assert.equal(response.body.error.code, 'INVALID_PDF');
   assert.equal((ctx.db.prepare('SELECT COUNT(*) AS count FROM CertificateFile').get() as { count: number }).count, 0);
+});
+
+async function report(id: string, fileHash?: string) {
+  const response = await request(ctx.app).get(`/api/v1/certificates/${id}/verification-report`).query(fileHash ? { fileHash } : {}).buffer(true).parse(binary).expect(200);
+  assert.equal(response.headers['content-type'], 'application/pdf');
+  assert.match(response.headers['content-disposition'], /^attachment; filename="educert-bien-ban-[0-9a-f]{8}-\d{8}T\d{6}Z\.pdf"$/);
+  const doc = await PDFDocument.load(response.body);
+  const subject = doc.getSubject()!;
+  assert.equal(response.headers['x-report-fingerprint'], sha256(Buffer.from(subject)));
+  const [page] = await readPdfText(response.body);
+  return { summary: JSON.parse(subject), text: page.text.replace(/\s+/g, ' '), compact: page.text.replace(/\s+/g, ''), bytes: response.body as Buffer };
+}
+
+test('QA-02: verification report without a file records chain data and does not claim a PDF check', async () => {
+  const { value } = await issued();
+  const before = Date.now();
+  const { summary, text, compact, bytes } = await report(value.certificateId);
+  assert.equal(summary.status, 'REGISTERED_ACTIVE');
+  assert.equal(summary.fileResult, 'NOT_CHECKED');
+  assert.equal(summary.verifyCode, 1);
+  assert.equal(summary.chainId, 31337);
+  assert.equal(summary.contractAddress, ctx.config.contractAddress);
+  assert.equal(summary.issuer, ctx.issuer.address);
+  assert.equal(summary.fileHash, value.fileHash);
+  assert.ok(Date.parse(summary.checkedAt) >= before - 1000 && Date.parse(summary.checkedAt) <= Date.now());
+  assert.ok(summary.blockNumber >= 1);
+  for (const expected of [value.certificateId, ctx.config.contractAddress, ctx.issuer.address, value.fileHash, summary.checkedAt]) assert.ok(compact.includes(expected), `report must print ${expected}`);
+  for (const expected of ['BIÊN BẢN XÁC MINH CHỨNG CHỈ', 'Chain ID 31337', 'Chưa đối chiếu tệp PDF', REPORT_DISCLAIMER]) assert.ok(text.includes(expected), `report must say ${expected}`);
+  assert.ok(!text.includes('TRÙNG KHỚP'));
+  assert.ok(!text.includes('Nguyễn Văn A'), 'public report must not contain off-chain personal data');
+  assert.deepEqual(await decodePdfQrCodes(bytes), [`${origin}/verify/${value.certificateId}`]);
+});
+
+test('QA-02: verification report states MATCH, FILE_HASH_MISMATCH and REVOKED independently', async () => {
+  const { value } = await issued();
+  const match = await report(value.certificateId, value.fileHash.toUpperCase().replace('0X', '0x'));
+  assert.equal(match.summary.fileResult, 'MATCH');
+  assert.ok(match.text.includes('TRÙNG KHỚP'));
+  const wrong = randomHash();
+  const mismatch = await report(value.certificateId, wrong);
+  assert.deepEqual([mismatch.summary.fileResult, mismatch.summary.verifyCode, mismatch.summary.candidateHash], ['FILE_HASH_MISMATCH', 3, wrong]);
+  await (await ctx.registry.getFunction('revokeCertificate')(value.certificateId, 2)).wait();
+  const revoked = await report(value.certificateId, wrong);
+  assert.deepEqual([revoked.summary.status, revoked.summary.fileResult, revoked.summary.verifyCode, revoked.summary.revokeReasonCode], ['REVOKED', 'FILE_HASH_MISMATCH', 2, 2]);
+  assert.ok(revoked.text.includes('THU HỒI') && revoked.text.includes('Gian lận') && revoked.text.includes('KHÔNG KHỚP'), 'both warnings must be printed');
+});
+
+test('QA-02: verification report rejects unknown IDs, bad hashes, extra fields and RPC failures without a PDF', async () => {
+  assert.equal((await request(ctx.app).get(`/api/v1/certificates/${randomHash()}/verification-report`).expect(404)).body.error.code, 'NOT_FOUND');
+  const { value } = await issued();
+  assert.equal((await request(ctx.app).get(`/api/v1/certificates/${value.certificateId}/verification-report`).query({ fileHash: '0x1234' }).expect(400)).body.error.code, 'VALIDATION_ERROR');
+  assert.equal((await request(ctx.app).get(`/api/v1/certificates/${value.certificateId}/verification-report`).query({ studentName: 'x' }).expect(400)).body.error.code, 'VALIDATION_ERROR');
+  const offline = createApp({ ...ctx.config, rpcUrl: `http://127.0.0.1:${await freePort()}` });
+  try {
+    const response = await request(offline.app).get(`/api/v1/certificates/${value.certificateId}/verification-report`).expect(503);
+    assert.equal(response.body.error.code, 'RPC_ERROR');
+  } finally { offline.chain.close(); offline.db.close(); }
 });
