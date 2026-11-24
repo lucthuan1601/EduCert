@@ -13,7 +13,7 @@ const checks = [
   { name: 'frontend-example', cwd: backend, args: ['node_modules/typescript/bin/tsc', '--noEmit', '-p', 'tsconfig.examples.json'] },
   { name: 'build', cwd: backend, args: ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.json'] },
   { name: 'contract-tests', cwd: root, args: ['node_modules/hardhat/internal/cli/cli.js', 'test'] },
-  { name: 'backend-tests', cwd: backend, args: ['--import', 'tsx', '--test', '--test-concurrency=1', 'test/backend.test.ts'] },
+  { name: 'backend-tests', cwd: backend, args: ['--import', 'tsx', '--test', '--test-concurrency=1', 'test/backend.test.ts', 'test/pdf.test.ts'] },
 ];
 const results = [];
 for (const check of checks) {

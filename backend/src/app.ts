@@ -12,7 +12,7 @@ import { ChainService } from './services/chain.js';
 import { createAuth } from './auth.js';
 import { PrivateStorage } from './services/storage.js';
 import { mountFiles } from './routes/files.js';
-import { DefaultPdfAdapter } from './services/pdf.js';
+import { TemplatePdfAdapter } from './services/pdf-template.js';
 import { mountDrafts } from './routes/drafts.js';
 import { mountQueries } from './routes/queries.js';
 
@@ -44,7 +44,7 @@ export function createApp(config: AppConfig, database?: Database.Database) {
   const auth = createAuth(config, db, chain);
   auth.mount(api);
   mountFiles(api, config, db, auth, chain, storage);
-  mountDrafts(api, config, db, auth, chain, storage, new DefaultPdfAdapter());
+  mountDrafts(api, config, db, auth, chain, storage, new TemplatePdfAdapter());
   mountQueries(api, config, db, auth, chain);
 
   app.use((_req, _res, next) => next(new ApiError(404, 'ROUTE_NOT_FOUND', 'Route not found')));
