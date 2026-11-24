@@ -1,0 +1,33 @@
+{
+  "measuredAt": "2026-11-24T05:08:25.878Z",
+  "node": "v24.22.0",
+  "platform": "win32",
+  "arch": "x64",
+  "results": [
+    {
+      "name": "typecheck",
+      "exitCode": 0,
+      "durationMs": 317
+    },
+    {
+      "name": "frontend-example",
+      "exitCode": 0,
+      "durationMs": 214
+    },
+    {
+      "name": "build",
+      "exitCode": 0,
+      "durationMs": 234
+    },
+    {
+      "name": "contract-tests",
+      "exitCode": 0,
+      "durationMs": 2246
+    },
+    {
+      "name": "backend-tests",
+      "exitCode": 0,
+      "durationMs": 41290
+    }
+  ]
+}

@@ -1,0 +1,175 @@
+{
+  "measuredAt": "2026-11-24T05:07:29.300Z",
+  "environment": {
+    "os": "Windows_NT 10.0.26200 x64",
+    "cpu": "12th Gen Intel(R) Core(TM) i5-12450H",
+    "cpuCount": 12,
+    "memoryGiB": 32,
+    "node": "v24.22.0",
+    "browser": "chromium 157.0.8103.80",
+    "hardhat": "2.29.2",
+    "solidity": "0.8.20",
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "chainId": 31337,
+    "network": "Hardhat node (automine), localhost",
+    "commit": "68044ee2664455f4cf1b1d37e0f0f753a4966265",
+    "branch": "feature/QA-05-measurements-docs",
+    "dirty": true
+  },
+  "method": {
+    "hashing": "50 lần/kích thước sau 5 lần khởi động; performance.now() trước/sau crypto.subtle.digest('SHA-256'); dữ liệu ngẫu nhiên tạo trong trang",
+    "chainRead": "getCertificate(id) qua eth_call: Node→RPC 200 lần sau 20 lần khởi động; trình duyệt→/rpc và trình duyệt→/api/v1/certificates/:id/public mỗi loại 100 lần sau 10 lần khởi động",
+    "gas": "receipt.gasUsed của giao dịch thật trong lần chạy; effectiveGasPrice của Hardhat local chỉ để tham khảo, không quy đổi phí mạng công khai"
+  },
+  "gas": {
+    "grantRole": 51537,
+    "issueCertificate": 207496,
+    "revokeCertificate": 58751,
+    "effectiveGasPriceWei": "745953764",
+    "issueConfirmMsAutomine": 64
+  },
+  "hashing": [
+    {
+      "bytes": 102400,
+      "label": "100 KiB",
+      "digest": {
+        "runs": 50,
+        "meanMs": 0.078,
+        "medianMs": 0.1,
+        "p95Ms": 0.2,
+        "sdMs": 0.068,
+        "minMs": 0,
+        "maxMs": 0.2
+      },
+      "blobToDigest": {
+        "runs": 50,
+        "meanMs": 0.386,
+        "medianMs": 0.3,
+        "p95Ms": 0.9,
+        "sdMs": 0.19,
+        "minMs": 0.2,
+        "maxMs": 1
+      }
+    },
+    {
+      "bytes": 524288,
+      "label": "512 KiB",
+      "digest": {
+        "runs": 50,
+        "meanMs": 0.314,
+        "medianMs": 0.3,
+        "p95Ms": 0.4,
+        "sdMs": 0.078,
+        "minMs": 0.2,
+        "maxMs": 0.6
+      },
+      "blobToDigest": {
+        "runs": 50,
+        "meanMs": 1.176,
+        "medianMs": 1,
+        "p95Ms": 2,
+        "sdMs": 0.716,
+        "minMs": 0.8,
+        "maxMs": 5.1
+      }
+    },
+    {
+      "bytes": 1048576,
+      "label": "1 MiB",
+      "digest": {
+        "runs": 50,
+        "meanMs": 0.89,
+        "medianMs": 0.9,
+        "p95Ms": 1.1,
+        "sdMs": 0.145,
+        "minMs": 0.7,
+        "maxMs": 1.6
+      },
+      "blobToDigest": {
+        "runs": 50,
+        "meanMs": 2.174,
+        "medianMs": 2.1,
+        "p95Ms": 2.8,
+        "sdMs": 0.343,
+        "minMs": 1.8,
+        "maxMs": 3.7
+      }
+    },
+    {
+      "bytes": 2097152,
+      "label": "2 MiB",
+      "digest": {
+        "runs": 50,
+        "meanMs": 1.644,
+        "medianMs": 1.6,
+        "p95Ms": 1.8,
+        "sdMs": 0.12,
+        "minMs": 1.5,
+        "maxMs": 2.2
+      },
+      "blobToDigest": {
+        "runs": 50,
+        "meanMs": 3.926,
+        "medianMs": 3.8,
+        "p95Ms": 4.3,
+        "sdMs": 0.638,
+        "minMs": 3.5,
+        "maxMs": 7.8
+      }
+    },
+    {
+      "bytes": 5242880,
+      "label": "5 MiB",
+      "digest": {
+        "runs": 50,
+        "meanMs": 4.024,
+        "medianMs": 4,
+        "p95Ms": 4.3,
+        "sdMs": 0.145,
+        "minMs": 3.8,
+        "maxMs": 4.6
+      },
+      "blobToDigest": {
+        "runs": 50,
+        "meanMs": 7.104,
+        "medianMs": 6.7,
+        "p95Ms": 7.7,
+        "sdMs": 1.928,
+        "minMs": 6.4,
+        "maxMs": 18
+      }
+    }
+  ],
+  "chainRead": {
+    "nodeToRpcEthCall": {
+      "runs": 200,
+      "meanMs": 14.807,
+      "medianMs": 15.727,
+      "p95Ms": 20.908,
+      "sdMs": 4.419,
+      "minMs": 2.37,
+      "maxMs": 26.942
+    },
+    "browserToViteRpcProxy": {
+      "runs": 100,
+      "meanMs": 3.379,
+      "medianMs": 3.3,
+      "p95Ms": 3.9,
+      "sdMs": 0.344,
+      "minMs": 2.9,
+      "maxMs": 4.9
+    },
+    "browserToBackendPublicApi": {
+      "runs": 100,
+      "meanMs": 54.107,
+      "medianMs": 52.75,
+      "p95Ms": 70.4,
+      "sdMs": 10.646,
+      "minMs": 25.9,
+      "maxMs": 78.4
+    }
+  }
+}
