@@ -33,7 +33,7 @@ jobs:
 
   # QA-03: frontend checks and Playwright E2E-01 → E2E-12 on an isolated Hardhat/backend/Vite stack.
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright 1.57 has no Chromium build for ubuntu-latest (26.04)
     timeout-minutes: 20
     needs: verify
     steps:
